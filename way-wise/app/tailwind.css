@@ -1,0 +1,110 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@layer components {
+  .tooltip-content {
+    visibility: hidden;
+    width: 120px;
+    background-color: black;
+    color: white;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 0;
+    position: absolute;
+    z-index: 1;
+    top: 100%;
+    left: 50%;
+    margin-left: -60px;
+  }
+
+  .cell:hover .tooltip-content {
+    visibility: visible;
+  }
+
+  @layer base {
+    table {
+      @apply w-full bg-white shadow-md rounded-lg overflow-hidden;
+    }
+
+    thead {
+      @apply bg-gray-200 sticky top-0 z-10;
+    }
+
+    thead th {
+      @apply px-6 py-4 text-center text-gray-800 font-semibold bg-gray-100;
+    }
+
+    tbody td {
+      @apply px-6 py-4 text-center border-b;
+    }
+
+    tbody tr:nth-child(even) td {
+      @apply bg-gray-50;
+    }
+
+    tbody tr:nth-child(odd) td {
+      @apply bg-white;
+    }
+
+    tbody tr:hover td {
+      @apply bg-gray-200;
+    }
+
+    th,
+    td {
+      @apply px-4 py-2;
+    }
+
+    /* Responsive styling */
+    @media (max-width: 768px) {
+      table {
+        border-collapse: collapse;
+      }
+
+      thead {
+        display: none;
+      }
+
+      tbody,
+      tr,
+      td {
+        display: block;
+        width: 100%;
+      }
+
+      tr {
+        margin-bottom: 15px;
+      }
+
+      td {
+        text-align: right;
+        padding-left: 50%;
+        position: relative;
+        border: none;
+        border-bottom: 1px solid #eee;
+      }
+
+      td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 0;
+        width: 50%;
+        padding-left: 15px;
+        font-weight: bold;
+        text-align: left;
+        white-space: nowrap;
+      }
+
+      td:last-child::before {
+        width: 100%;
+      }
+    }
+  }
+}

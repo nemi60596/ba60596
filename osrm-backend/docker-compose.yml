@@ -1,0 +1,20 @@
+version: "3.8"
+
+services:
+  osrm:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - type: bind
+        source: ./data
+        target: /data
+    command: >
+      sh -c "
+      /usr/local/bin/osrm-extract -p /opt/car.lua /data/map.osm.pbf &&
+      /usr/local/bin/osrm-partition /data/map.osm.pbf &&
+      /usr/local/bin/osrm-customize /data/map.osm.pbf &&
+      /usr/local/bin/osrm-routed --algorithm mld /data/map.osrm
+      "

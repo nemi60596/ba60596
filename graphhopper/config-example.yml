@@ -1,0 +1,110 @@
+#This is a configuration file for GraphHopper. It is used to configure the routing engine and the server.
+#It contains a advanced routing profile for trucks, which is used to calculate routes for trucks.
+
+graphhopper:
+  datareader.file: ""
+  graph.location: graph-cache
+  profiles:
+    - name: truck
+      custom_model: 
+
+        priority:
+          - if: "road_access == PRIVATE"
+            multiply_by: 0
+          - if: "car_access == false || hgv == NO || max_width < 2.55 || max_height < 4.0 || max_weight < 40000 || max_length < 18.75"
+            multiply_by: 0
+          - if: "road_access == CUSTOMERS"
+            multiply_by: 0
+          - if: "road_access == DELIVERY"
+            multiply_by: 0
+          - if: "road_access == DESTINATION"
+            multiply_by: 0
+          - else:
+            multiply_by: 1
+        speed:
+          - if: "road_class == MOTORWAY"
+            limit_to: 75
+          - else:
+            limit_to: 50
+          - if: "road_class == TRUNK"
+            limit_to: 65
+          - if: "road_class == PRIMARY"
+            limit_to: 50
+          - if: "road_class == SECONDARY"
+            limit_to: 30
+          - if: "road_class == TERTIARY"
+            limit_to: 15
+          - if: "road_class == UNCLASSIFIED"
+            limit_to: 10
+          - if: "road_class == RESIDENTIAL"
+            limit_to: 8
+          - if: "road_class == LIVING_STREET"
+            limit_to: 3
+          - if: "road_class == SERVICE"
+            limit_to: 3
+          - if: "surface == DIRT"
+            limit_to: 20
+          - if: "surface == PAVED"
+            limit_to: 65
+          - if: "surface == COBBLESTONE"
+            limit_to: 20
+          - if: "surface == ASPHALT"
+            limit_to: 65
+          - if: "surface == SAND"
+            limit_to: 20
+          - if: "surface == CONCRETE"
+            limit_to: 75
+          - if: "surface == PAVING_STONES"
+            limit_to: 40
+          - if: "surface == COMPACTED"
+            limit_to: 50
+          - if: "surface == GROUND"
+            limit_to: 30
+          - if: "surface == GRAVEL"
+            limit_to: 30
+          
+  profiles_ch:
+    - profile: truck
+  profiles_lm: []
+  graph.encoded_values: surface,toll,track_type,country,hgv,max_width,max_height,max_length,max_axle_load,car_average_speed,max_weight,road_access,car_access,road_class
+  prepare.ch.threads: 20
+  prepare.lm.landmarks: 20
+  prepare.lm.threads: 20
+  country_rules.enabled: true
+  import.osm.ignored_highways: footway,cycleway,path,pedestrian,steps,track,bus_guideway,busway,bridleway,corridor,via_ferrata,proposed,construction,bus_stop,crossing,cyclist_waiting_aid,elevator,emergency_bay,emergency_access_point,give_way,ladder,plattform,rest_area,speed_camera,street_lamp,traffic_mirror,trailhead
+
+server:
+  application_connectors:
+    - type: http
+      port: 8989
+      bind_host: localhost
+      max_request_header_size: 50k
+  request_log:
+    appenders: []
+  admin_connectors:
+    - type: http
+      port: 8990
+      bind_host: localhost
+
+logging:
+  appenders:
+    - type: file
+      time_zone: UTC
+      current_log_filename: logs/graphhopper.log
+      log_format: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+      archive: true
+      archived_log_filename_pattern: ./logs/graphhopper-%d.log.gz
+      archived_file_count: 30
+      never_block: true
+    - type: console
+      time_zone: UTC
+      log_format: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
+  loggers:
+    "com.graphhopper.osm_warnings":
+      level: DEBUG
+      additive: false
+      appenders:
+        - type: file
+          currentLogFilename: logs/osm_warnings.log
+          archive: false
+          logFormat: '[%level] %msg%n'

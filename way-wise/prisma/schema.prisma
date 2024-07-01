@@ -1,0 +1,152 @@
+datasource db {
+    provider = "sqlite"
+    url      = env("DATABASE_URL")
+}
+
+generator client {
+    provider        = "prisma-client-js"
+    previewFeatures = ["relationJoins"]
+}
+
+generator zod {
+    provider = "prisma-zod-generator"
+    output   = "./generated-zod-schemas"
+}
+
+generator dbml {
+    provider = "prisma-dbml-generator"
+}
+
+model Run {
+    id                  Int                   @id @default(autoincrement())
+    createdAt           DateTime              @default(now())
+    updatedAt           DateTime              @updatedAt
+    notes               String
+    benchmarks          Benchmark[]
+    resultsRoute        ResultsRoute[]
+    RoutingEngineResult RoutingEngineResult[]
+}
+
+model Benchmark {
+    id                   Int                   @id @default(autoincrement())
+    runId                Int
+    run                  Run                   @relation(fields: [runId], references: [id])
+    rawRouteId           Int
+    rawRoute             RawRoute              @relation(fields: [rawRouteId], references: [id])
+    routingEngineResults RoutingEngineResult[]
+    createdAt            DateTime              @default(now())
+    updatedAt            DateTime              @updatedAt
+    resultsRoute         ResultsRoute[]
+
+    @@index([runId, rawRouteId])
+}
+
+model RoutingEngineResult {
+    id                     Int            @id @default(autoincrement())
+    benchmarkId            Int
+    benchmark              Benchmark      @relation(fields: [benchmarkId], references: [id])
+    name                   String
+    distance               Float
+    distanceByCountry      String?
+    calculatedDistance     Float?
+    tollDistanceByCountry  String?
+    calculatedTollDistance Float?
+    duration               Float
+    rtt                    Float
+    elevation              Float?         @default(0.0)
+    geometry               String?
+    runId                  Int            @default(0)
+    run                    Run            @relation(fields: [runId], references: [id])
+    ResultsRoute           ResultsRoute[]
+
+    @@index([benchmarkId])
+}
+
+model Reference {
+    id                Int       @id @default(autoincrement())
+    rawRoutesId       Int?      @unique
+    rawRoutes         RawRoute? @relation(fields: [rawRoutesId], references: [id])
+    loadingState      String
+    unitAvailable     Boolean
+    modeOfTransport   String
+    distanceValue     Float
+    distanceUnit      String
+    tollDistanceValue Float
+    tollDistanceUnit  String
+    durationValue     Float
+    durationUnit      String
+    geometries        String    @unique
+    partOfRoundtrip   Boolean?  @default(false)
+    co2Value          Float?    @default(0.0)
+    co2Unit           String?   @default("kg")
+    createdAt         DateTime  @default(now())
+    updatedAt         DateTime  @updatedAt
+}
+
+model RawRoute {
+    id             Int            @id @default(autoincrement())
+    startLat       Float
+    startLon       Float
+    destinationLat Float
+    destinationLon Float
+    distance       Float          @default(0.0)
+    distanceClass  String         @default("undefined")
+    regionClass    String         @default("undefined")
+    referenceId    Int?           @unique
+    benchmark      Benchmark[]
+    resultsRoute   ResultsRoute[]
+    reference      Reference?
+    createdAt      DateTime       @default(now())
+    updatedAt      DateTime       @updatedAt
+
+    @@unique([startLat, startLon, destinationLat, destinationLon])
+    @@index([referenceId])
+}
+
+model Snapshot {
+    id           Int            @id @default(autoincrement())
+    createdAt    DateTime       @default(now())
+    name         String
+    description  String?
+    routeResults ResultsRoute[]
+}
+
+model ResultsRoute {
+    id                    Int                 @id @default(autoincrement())
+    routinEngineResultId  Int
+    routingEngineResult   RoutingEngineResult @relation(fields: [routinEngineResultId], references: [id])
+    runId                 Int
+    run                   Run                 @relation(fields: [runId], references: [id])
+    benchmarkId           Int
+    benchmark             Benchmark           @relation(fields: [benchmarkId], references: [id])
+    rawRouteId            Int
+    rawRoute              RawRoute            @relation(fields: [rawRouteId], references: [id])
+    referenceDistance     Float
+    referenceDuration     Float
+    meanReferenceSpeed    Float
+    referenceTollDistance Float
+    referenceGeometries   String
+    name                  String
+    distance              Float
+    duration              Float
+    meanSpeed             Float
+    tollDistance          Float?
+    rtt                   Float
+    geometries            String
+    distanceClass         String
+    regionClass           String
+    snapshotId            Int                 @default(0)
+
+    snapshot Snapshot @relation(fields: [snapshotId], references: [id])
+
+    @@index([snapshotId])
+    @@index([benchmarkId])
+    @@index([routinEngineResultId])
+}
+
+model RoutingSession {
+    id           String   @id @default(uuid())
+    routeResults String
+    createdAt    DateTime @default(now())
+    updatedAt    DateTime @updatedAt
+}

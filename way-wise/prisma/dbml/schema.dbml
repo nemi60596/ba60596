@@ -1,0 +1,149 @@
+//// ------------------------------------------------------
+//// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+//// ------------------------------------------------------
+
+Table Run {
+  id Int [pk, increment]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  notes String [not null]
+  benchmarks Benchmark [not null]
+  resultsRoute ResultsRoute [not null]
+  RoutingEngineResult RoutingEngineResult [not null]
+}
+
+Table Benchmark {
+  id Int [pk, increment]
+  runId Int [not null]
+  run Run [not null]
+  rawRouteId Int [not null]
+  rawRoute RawRoute [not null]
+  routingEngineResults RoutingEngineResult [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  resultsRoute ResultsRoute [not null]
+}
+
+Table RoutingEngineResult {
+  id Int [pk, increment]
+  benchmarkId Int [not null]
+  benchmark Benchmark [not null]
+  name String [not null]
+  distance Float [not null]
+  distanceByCountry String
+  calculatedDistance Float
+  tollDistanceByCountry String
+  calculatedTollDistance Float
+  duration Float [not null]
+  rtt Float [not null]
+  elevation Float [default: 0]
+  geometry String
+  runId Int [not null, default: 0]
+  run Run [not null]
+  ResultsRoute ResultsRoute [not null]
+}
+
+Table Reference {
+  id Int [pk, increment]
+  rawRoutesId Int [unique]
+  rawRoutes RawRoute
+  loadingState String [not null]
+  unitAvailable Boolean [not null]
+  modeOfTransport String [not null]
+  distanceValue Float [not null]
+  distanceUnit String [not null]
+  tollDistanceValue Float [not null]
+  tollDistanceUnit String [not null]
+  durationValue Float [not null]
+  durationUnit String [not null]
+  geometries String [unique, not null]
+  partOfRoundtrip Boolean [default: false]
+  co2Value Float [default: 0]
+  co2Unit String [default: 'kg']
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+}
+
+Table RawRoute {
+  id Int [pk, increment]
+  startLat Float [not null]
+  startLon Float [not null]
+  destinationLat Float [not null]
+  destinationLon Float [not null]
+  distance Float [not null, default: 0]
+  distanceClass String [not null, default: 'undefined']
+  regionClass String [not null, default: 'undefined']
+  referenceId Int [unique]
+  benchmark Benchmark [not null]
+  resultsRoute ResultsRoute [not null]
+  reference Reference
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+
+  indexes {
+    (startLat, startLon, destinationLat, destinationLon) [unique]
+  }
+}
+
+Table Snapshot {
+  id Int [pk, increment]
+  createdAt DateTime [default: `now()`, not null]
+  name String [not null]
+  description String
+  routeResults ResultsRoute [not null]
+}
+
+Table ResultsRoute {
+  id Int [pk, increment]
+  routinEngineResultId Int [not null]
+  routingEngineResult RoutingEngineResult [not null]
+  runId Int [not null]
+  run Run [not null]
+  benchmarkId Int [not null]
+  benchmark Benchmark [not null]
+  rawRouteId Int [not null]
+  rawRoute RawRoute [not null]
+  referenceDistance Float [not null]
+  referenceDuration Float [not null]
+  meanReferenceSpeed Float [not null]
+  referenceTollDistance Float [not null]
+  referenceGeometries String [not null]
+  name String [not null]
+  distance Float [not null]
+  duration Float [not null]
+  meanSpeed Float [not null]
+  tollDistance Float
+  rtt Float [not null]
+  geometries String [not null]
+  distanceClass String [not null]
+  regionClass String [not null]
+  snapshotId Int [not null, default: 0]
+  snapshot Snapshot [not null]
+}
+
+Table RoutingSession {
+  id String [pk]
+  routeResults String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+}
+
+Ref: Benchmark.runId > Run.id
+
+Ref: Benchmark.rawRouteId > RawRoute.id
+
+Ref: RoutingEngineResult.benchmarkId > Benchmark.id
+
+Ref: RoutingEngineResult.runId > Run.id
+
+Ref: Reference.rawRoutesId - RawRoute.id
+
+Ref: ResultsRoute.routinEngineResultId > RoutingEngineResult.id
+
+Ref: ResultsRoute.runId > Run.id
+
+Ref: ResultsRoute.benchmarkId > Benchmark.id
+
+Ref: ResultsRoute.rawRouteId > RawRoute.id
+
+Ref: ResultsRoute.snapshotId > Snapshot.id

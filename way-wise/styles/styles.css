@@ -1,0 +1,20 @@
+/* styles.css */
+.table-base {
+  @apply table-auto w-full border-collapse;
+}
+
+.table-header {
+  @apply bg-gray-200;
+}
+
+.table-header-cell {
+  @apply px-4 py-2 border-b text-left text-gray-700 font-bold;
+}
+
+.table-row {
+  @apply hover:bg-gray-100;
+}
+
+.table-cell {
+  @apply px-4 py-2 border-b;
+}

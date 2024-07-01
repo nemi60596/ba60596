@@ -1,0 +1,21 @@
+{
+  "transportChain": [
+    {
+      "from": {
+        "type": "ADDRESS",
+        "lon": 6.72873,
+        "lat": 51.4712
+      },
+      "to": {
+        "type": "ADDRESS",
+        "lon": 6.98481,
+        "lat": 19.8572
+      },
+      "loadingState": "FULL",
+      "unitAvailable": false,
+      "modeOfTransport": "ROAD"
+    }
+  ]
+}
+
+

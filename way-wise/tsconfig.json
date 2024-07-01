@@ -1,0 +1,24 @@
+{
+  "exclude": ["./cypress", "./cypress.config.ts", "./bin", "./src","./test"],
+  "include": ["remix.env.d.ts", "**/*.ts", "**/*.tsx", "**/*.d.ts"],
+  "compilerOptions": {
+    "lib": ["DOM", "DOM.Iterable", "ES2020"],
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "jsx": "react-jsx",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "target": "ES2020",
+    "typeRoots" : ["./node_modules/@types"],
+    "strict": true,
+    "allowJs": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "~/*": ["./app/*"]
+    },
+    "skipLibCheck": true,
+    "noEmit": true
+  }
+}

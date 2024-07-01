@@ -1,0 +1,94 @@
+version: "3.8"
+
+services:
+  graphhopper:
+    build:
+      context: ./graphhopper
+      args:
+        JAVA_OPTS: "-XX:HeapSizePerGCThread=2000m -XX:LargePageHeapSizeThreshold=2000m -Xmx50G -Xms2G -Xss2m -XX:+UseParallelGC -XX:ParallelGCThreads=20"
+        FILE: "${OSM_FILE_NAME}"
+        CONFIG: "config-example.yml"
+    ports:
+      - "8989:8989"
+    volumes:
+      - ./graphhopper/data:/data
+      - ./graphhopper/config-example.yml:/config.yml
+
+  osrm:
+    build:
+      context: ./osrm-backend
+      dockerfile: docker/Dockerfile
+      args:
+        OSM_FILE_PATH: "${OSM_FILE_NAME}"
+    ports:
+      - "5000:5000"
+    volumes:
+      - type: bind
+        source: ./osrm-backend/data
+        target: /data
+    environment:
+      OSM_DATA_FILE: "${OSM_FILE_NAME}"
+    command: >
+      sh -c "
+      /usr/local/bin/osrm-extract -p /opt/truck.lua /data/$${OSM_DATA_FILE} &&
+      /usr/local/bin/osrm-partition /data/$${OSM_DATA_FILE} &&
+      /usr/local/bin/osrm-customize /data/$${OSM_DATA_FILE} &&
+      /usr/local/bin/osrm-routed --algorithm mld /data/$${OSM_DATA_FILE}
+      "
+    # The following command is an alternative to the above command. It uses the pre-built graph file.
+    # command: >
+    #   sh -c "
+    #       /usr/local/bin/osrm-routed --algorithm mld /data/$${OSM_DATA_FILE}
+    #       "
+  valhallaDocker:
+    image: ghcr.io/gis-ops/docker-valhalla/valhalla:latest
+    ports:
+      - 8002:8002
+    build:
+      context: ./docker-valhalla
+      #args:
+      #  - VALHALLA_UID=1000
+      #  - VALHALLA_GID=1000
+    volumes:
+      - ./docker-valhalla/custom_files/:/custom_files
+    environment:
+      - server_threads=20 # determines how many threads will be used to run the valhalla server
+      - serve_tiles=True # If True, starts the service. If false, stops after building the graph.
+      - use_tiles_ignore_pbf=True # load existing valhalla_tiles.tar directly
+      - tileset_name=valhalla_tiles # name of the resulting graph on disk
+      - build_elevation=False # build elevation with "True" or "Force": will download only the elevation for areas covered by the graph tiles
+      - build_admins=True # build admins db with "True" or "Force"
+      - build_time_zones=True # build timezone db with "True" or "Force"
+      - build_transit=False # build transit, needs existing GTFS directories mapped to /gtfs_feeds
+      - build_tar=True # build an indexed tar file from the tile_dir for faster graph loading times
+      - force_rebuild=False # forces a rebuild of the routing tiles with "True"
+      - update_existing_config=True # if there are new config entries in the default config, add them to the existing config
+
+  db:
+    image: mariadb:latest
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: true
+      MYSQL_DATABASE: iris
+    ports:
+      - "3306:3306"
+
+  iris:
+    build:
+      context: ./iris
+      dockerfile: Dockerfile
+    ports:
+      - "8082:8082"
+    depends_on:
+      - db
+
+  way-wise:
+    build:
+      context: ./way-wise
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: "file:/data/sqlite.db"
+      NODE_ENV: "production"
+    volumes:
+      - ./way-wise/data:/data
